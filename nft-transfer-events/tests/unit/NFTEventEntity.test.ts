@@ -19,17 +19,8 @@ describe('NFT Transfer Events Entity', function () {
 
     describe('GET', function () {
         it(`Should return undefined when GET an inexistent event`, async () => {
-            const PK = 'inexistent';
-            const getResult = await nftEventsDB.get(PK);
+            const getResult = await nftEventsDB.get('inexistent');
             expect(getResult).toBeUndefined();
-        });
-        it(`Should return only primary key when GET without 'projectionExpression'`, async () => {
-            const getResult = await nftEventsDB.get(PK);
-            expect(getResult.transactionHash).toEqual(PK);
-            expect(getResult.blockNumber).toBeUndefined();
-            expect(getResult.from).toBeUndefined();
-            expect(getResult.to).toBeUndefined();
-            expect(getResult.tokenId).toBeUndefined();
         });
         it(`Should return all attributes through 'projectionExpression'`, async () => {
             const getResult = await nftEventsDB.get(PK, 'transactionHash,blockNumber,tokenId');
@@ -42,6 +33,14 @@ describe('NFT Transfer Events Entity', function () {
                 '#from': 'from',
                 '#to': 'to',
             });
+            expect(getResult.blockNumber).toEqual(INITIAL_RECORD.blockNumber);
+            expect(getResult.from).toEqual(INITIAL_RECORD.from);
+            expect(getResult.to).toEqual(INITIAL_RECORD.to);
+            expect(getResult.tokenId).toEqual(INITIAL_RECORD.tokenId);
+        });
+        it(`Should return all attributes when call the simplified GET method from NFTEventEntityDAO`, async () => {
+            const getResult = await nftEventsDB.get(PK);
+            expect(getResult.transactionHash).toEqual(PK);
             expect(getResult.blockNumber).toEqual(INITIAL_RECORD.blockNumber);
             expect(getResult.from).toEqual(INITIAL_RECORD.from);
             expect(getResult.to).toEqual(INITIAL_RECORD.to);

@@ -1,3 +1,4 @@
+import { AttributeValue } from '@aws-sdk/client-dynamodb';
 import { Entity } from './entity';
 
 /**
@@ -18,5 +19,19 @@ export class NFTEventEntityDAO extends Entity {
             // If process.env.DYNAMODB_ENDPOINT exists, then use it to connect to DynamoDB.
             process.env.DYNAMODB_ENDPOINT,
         );
+    }
+
+    /**
+     * Fetch an NFT Transfer Event by transactionHash of the transaction where it was caught
+     *
+     * @param id transaction Hash of the Transaction which emitted the Transfer event
+     *
+     * @returns NFT Transfer Event
+     */
+    async get(id: string): Promise<Record<string, AttributeValue> | undefined> {
+        return super.get(id, 'transactionHash, blockNumber, #from, #to, tokenId', {
+            '#from': 'from',
+            '#to': 'to',
+        });
     }
 }
