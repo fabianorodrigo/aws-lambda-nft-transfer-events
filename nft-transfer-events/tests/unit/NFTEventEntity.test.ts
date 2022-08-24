@@ -71,17 +71,23 @@ describe('NFT Transfer Events Entity', function () {
             const result = await nftEventsDB.save({
                 transactionHash: PK,
                 blockNumber: 1979,
-                from: 'luciano',
                 to: 'calleri',
-                tokenId: 'gol de bicicleta',
+                tokenId: INITIAL_RECORD.tokenId,
             });
 
             expect(result.$metadata.httpStatusCode).toEqual(200);
+            expect(result.Attributes.blockNumber).toEqual(1979);
+            expect(result.Attributes.to).toEqual('calleri');
+            expect(result.Attributes.tokenId).toEqual(INITIAL_RECORD.tokenId);
+            // só retorna os dados que foram enviados para atualização (mesmo que com o mesmo valor anterior)
+            expect(result.Attributes.from).toBeUndefined();
 
-            const getResult = await nftEventsDB.get(PK, 'transactionHash,blockNumber,tokenId');
+            const getResult = await nftEventsDB.get(PK);
             expect(getResult.transactionHash).toEqual(PK);
             expect(getResult.blockNumber).toEqual(1979);
-            expect(getResult.tokenId).toEqual('gol de bicicleta');
+            expect(getResult.to).toEqual('calleri');
+            expect(getResult.from).toEqual(INITIAL_RECORD.from);
+            expect(getResult.tokenId).toEqual(INITIAL_RECORD.tokenId);
         });
     });
 });

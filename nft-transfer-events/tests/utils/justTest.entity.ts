@@ -1,9 +1,9 @@
-import { Entity } from '../../dynamodb/entity';
+import { EntityDAO } from '../../dynamodb/entity';
 
 /**
  * Executes DAO operations for NFT events.
  */
-export class JustTestEntityDAO extends Entity {
+export class JustTestEntityDAO extends EntityDAO {
     constructor() {
         super(
             {

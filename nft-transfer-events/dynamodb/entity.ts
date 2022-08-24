@@ -18,11 +18,12 @@ import {
     PutCommand,
     ScanCommand,
     UpdateCommand,
+    UpdateCommandInput,
 } from '@aws-sdk/lib-dynamodb';
 import { DEBUG } from '../utils';
 import { translateConfig } from './dynamoDbDocumentClientOptions';
 
-export abstract class Entity {
+export abstract class EntityDAO {
     private tableName: string;
     private primaryKeyName!: string;
     private dynamoURLEndpoint!: string;
@@ -177,19 +178,16 @@ export abstract class Entity {
                 DEBUG('###DEBUG POS PUT', putResult);
                 return putResult;
             } else {
-                DEBUG('###DEBUG PRE UPDATE', item);
-                const updtResult = await this.dbDocClient.send(
-                    new UpdateCommand({
-                        TableName: this.TableName,
-                        Key: this.getKeyAttributeValueFromEntity(entity),
-                        UpdateExpression: this.getUpdateExpression(item),
-                        // ExpressionAttributeNames: {
-                        //     '#value': 'value',
-                        // },
-                        ExpressionAttributeValues: this.getExpressionAttributeValues(item),
-                        ReturnValues: 'ALL_NEW',
-                    }),
-                );
+                const param: UpdateCommandInput = {
+                    TableName: this.TableName,
+                    Key: this.getKeyAttributeValueFromEntity(entity),
+                    UpdateExpression: this.getUpdateExpression(item),
+                    ExpressionAttributeNames: this.geExpressionAttributeNames(item),
+                    ExpressionAttributeValues: this.getExpressionAttributeValues(item),
+                    ReturnValues: 'UPDATED_NEW',
+                };
+                DEBUG('###DEBUG PRE UPDATE', param);
+                const updtResult = await this.dbDocClient.send(new UpdateCommand(param));
                 DEBUG('###DEBUG POS UPDATE', updtResult);
                 return updtResult;
             }
@@ -210,6 +208,13 @@ export abstract class Entity {
         return expV;
     }
 
+    /**
+     * Based on the {item}, creates an expression in the format:
+     * set #attribute1Name = :attribute1Name, #attribute2Name = :attribute2Name
+     *
+     * @param item Map with keys and values
+     * @returns updte expression
+     */
     private getUpdateExpression(item: Record<string, AttributeValue>): string {
         let exp = 'set ';
         let count = 0;
@@ -219,11 +224,29 @@ export abstract class Entity {
                 if (count > 0) {
                     exp += ', ';
                 }
-                exp += `${attributes[i]} = ${attributes[i]}`;
+                exp += `#${attributes[i]} = :${attributes[i]}`;
                 count++;
             }
         }
         return exp;
+    }
+
+    /**
+     * Based on the {item}, creates an expression in the format:
+     * {#attribute1Name: attribute1Name, #attribute2Name : attribute2Name }
+     *
+     * @param item Map with keys and values
+     * @returns Map between attributes alias and real attribute names
+     */
+    private geExpressionAttributeNames(item: Record<string, AttributeValue>): Record<string, string> {
+        const result: Record<string, string> = {};
+        const attributes = Object.keys(item);
+        for (let i = 0; i < attributes.length; i++) {
+            if (attributes[i] != this.primaryKeyName) {
+                result[`#${attributes[i]}`] = attributes[i];
+            }
+        }
+        return result;
     }
 
     /**

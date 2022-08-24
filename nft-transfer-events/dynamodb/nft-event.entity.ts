@@ -1,10 +1,10 @@
 import { AttributeValue } from '@aws-sdk/client-dynamodb';
-import { Entity } from './entity';
+import { EntityDAO } from './entity';
 
 /**
  * Executes DAO operations for NFT events.
  */
-export class NFTEventEntityDAO extends Entity {
+export class NFTEventEntityDAO extends EntityDAO {
     constructor() {
         super(
             {
