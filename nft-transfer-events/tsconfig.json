@@ -10,7 +10,7 @@
       "esModuleInterop": true, 
       "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true,  
-      "types":["@types/jest"]
+      "types":["@types/jest","jest"]
     },
-    "exclude": ["node_modules", "**/*.test.ts"]
+    "exclude": ["node_modules"]
   }

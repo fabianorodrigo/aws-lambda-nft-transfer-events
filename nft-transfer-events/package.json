@@ -16,7 +16,7 @@
   "scripts": {
     "unit": "jest --runInBand",
     "lint": "eslint '*.ts' --quiet --fix",
-    "compile": "tsc",
+    "compile": "tsc --project ./tsconfig.build.json",
     "startDynamoLocal": "docker run -d --rm --name dynamoLocal amazon/dynamodb-local",
     "stopDynamoLocal": "docker stop dynamoLocal",
     "test": "npm run startDynamoLocal && npm run compile && DYNAMODB_ENDPOINT=http://172.17.0.2:8000 npm run unit ; npm run stopDynamoLocal"
