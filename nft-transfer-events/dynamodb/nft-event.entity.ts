@@ -1,4 +1,4 @@
-import { AttributeValue } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
 import { EntityDAO } from './entity';
 
 /**
@@ -28,8 +28,21 @@ export class NFTEventEntityDAO extends EntityDAO {
      *
      * @returns NFT Transfer Event
      */
-    async get(id: string): Promise<Record<string, AttributeValue> | undefined> {
+    async get(id: string): Promise<Record<string, NativeAttributeValue> | undefined> {
         return super.get(id, 'transactionHash, blockNumber, #from, #to, tokenId', {
+            '#from': 'from',
+            '#to': 'to',
+        });
+    }
+
+    /**
+     * Fetch all NFT Transfer Event
+     *
+     *
+     * @returns NFT Transfer Event
+     */
+    async getAll(): Promise<Record<string, NativeAttributeValue>[] | undefined> {
+        return super.getAll('transactionHash, blockNumber, #from, #to, tokenId', {
             '#from': 'from',
             '#to': 'to',
         });

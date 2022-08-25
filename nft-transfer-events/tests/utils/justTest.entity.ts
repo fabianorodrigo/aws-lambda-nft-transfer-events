@@ -19,4 +19,16 @@ export class JustTestEntityDAO extends EntityDAO {
             process.env.DYNAMODB_ENDPOINT,
         );
     }
+
+    setDbDocClientToUndefined() {
+        delete this.dbDocClient;
+    }
+
+    setTableNameToEmpty() {
+        this.tableName = '';
+    }
+
+    setCreateTableCommandInputToUndefined() {
+        delete this.createTableCommandInput;
+    }
 }

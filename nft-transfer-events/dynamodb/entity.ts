@@ -1,13 +1,12 @@
 import {
-    AttributeValue,
     CreateTableCommand,
     CreateTableCommandInput,
     DynamoDBClient,
-    GetItemInput,
     ListTablesCommand,
     PutItemCommandOutput,
     UpdateItemCommandOutput,
 } from '@aws-sdk/client-dynamodb';
+import { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
 // The DynamoDB Document client simplifies working with items by abstracting the notion of attribute values.
 // This abstraction annotates native JavaScript types supplied as input parameters, and converts annotated
 // response data to native JavaScript types.
@@ -20,19 +19,19 @@ import {
     UpdateCommand,
     UpdateCommandInput,
 } from '@aws-sdk/lib-dynamodb';
-import { DEBUG } from '../utils';
+import { ApplicationError, DEBUG } from '../utils';
 import { translateConfig } from './dynamoDbDocumentClientOptions';
 
 export abstract class EntityDAO {
-    private tableName: string;
+    protected tableName: string;
     private primaryKeyName!: string;
     private dynamoURLEndpoint!: string;
     private dbClient!: DynamoDBClient;
-    protected dbDocClient!: DynamoDBDocumentClient;
-    private createTableCommandInput: CreateTableCommandInput;
+    protected dbDocClient: DynamoDBDocumentClient | undefined;
+    protected createTableCommandInput: CreateTableCommandInput | undefined;
 
     constructor(createTableCommandInput: CreateTableCommandInput, dynamoURLEndpoint?: string) {
-        if (!createTableCommandInput.TableName) throw new Error(`TableName is required`);
+        if (!createTableCommandInput.TableName) throw new ApplicationError(`TableName is required`);
         this.tableName = createTableCommandInput.TableName;
         // for now, just support single primary key
         if (
@@ -66,9 +65,6 @@ export abstract class EntityDAO {
     get CreateTableCommandInput() {
         return this.createTableCommandInput;
     }
-    get DbClient() {
-        return this.dbClient;
-    }
 
     /**
      * Build an object that represents a Key with its type and value {S: value }
@@ -86,7 +82,7 @@ export abstract class EntityDAO {
      * @param entity entity from which is extracted the data to build the key
      * @returns Object representing a DynamoDB Table Key
      */
-    getKeyAttributeValueFromEntity(entity: Record<string, AttributeValue>): Record<string, string> {
+    getKeyAttributeValueFromEntity(entity: Record<string, NativeAttributeValue>): Record<string, string> {
         return this.getKeyAttributeValue(entity[this.primaryKeyName] as unknown as string);
     }
 
@@ -104,9 +100,9 @@ export abstract class EntityDAO {
         id: string,
         projectionExpression?: string,
         expressionAttributeNames?: Record<string, string>,
-    ): Promise<Record<string, AttributeValue> | undefined> {
-        if (!this.dbDocClient) throw new Error(`dbDocClient is required`);
-        if (!id) throw new Error(`${this.primaryKeyName} is required`);
+    ): Promise<Record<string, NativeAttributeValue> | undefined> {
+        if (!this.dbDocClient) throw new ApplicationError(`dbDocClient is required`);
+        if (!id) throw new ApplicationError(`${this.primaryKeyName} is required`);
         try {
             const param: GetCommandInput = {
                 TableName: this.TableName,
@@ -122,9 +118,8 @@ export abstract class EntityDAO {
             DEBUG('###DEBUG POS GET', result);
             return result.Item;
         } catch (e: unknown) {
-            console.error((<Error>e).message, (<Error>e).stack);
+            throw new ApplicationError(`It was not possible to get ${this.TableName} with ID '${id}'`, <Error>e);
         }
-        return undefined;
     }
 
     /**
@@ -136,8 +131,11 @@ export abstract class EntityDAO {
      * @param {*} expressionAttributeNames Alias to attributes (used when the
      *  attributes are reserved works such as name, value, from, to ...)
      */
-    async getAll(projectionExecution?: string, expressionAttributeNames?: { [alias: string]: string }): Promise<any> {
-        if (!this.dbDocClient) throw new Error(`DBDocClient is required`);
+    async getAll(
+        projectionExecution?: string,
+        expressionAttributeNames?: { [alias: string]: string },
+    ): Promise<Record<string, NativeAttributeValue>[] | undefined> {
+        if (!this.dbDocClient) throw new ApplicationError(`dbDocClient is required`);
         try {
             const result = await this.dbDocClient.send(
                 new ScanCommand({
@@ -149,18 +147,19 @@ export abstract class EntityDAO {
                     ExpressionAttributeNames: expressionAttributeNames,
                 }),
             );
-            console.log(`Success`, result);
             return result.Items;
         } catch (e: unknown) {
-            console.error((<Error>e).message, (<Error>e).stack);
+            throw new ApplicationError(`It was not possible to get ${this.TableName} registries`, <Error>e);
         }
     }
 
-    async save(entity: Record<string, AttributeValue>): Promise<PutItemCommandOutput | UpdateItemCommandOutput | null> {
-        if (!this.dbDocClient) throw new Error(`dbDocClient is required`);
-        if (!entity) throw new Error(`Entity ${this.TableName} is required`);
+    async save(
+        entity: Record<string, NativeAttributeValue>,
+    ): Promise<PutItemCommandOutput | UpdateItemCommandOutput | null> {
+        if (!this.dbDocClient) throw new ApplicationError(`dbDocClient is required`);
+        if (!entity) throw new ApplicationError(`Entity ${this.TableName} is required`);
         try {
-            const item: Record<string, AttributeValue> = {};
+            const item: Record<string, NativeAttributeValue> = {};
             const attributes = Object.keys(entity);
             for (let i = 0; i < attributes.length; i++) {
                 item[attributes[i]] = entity[attributes[i]];
@@ -192,13 +191,17 @@ export abstract class EntityDAO {
                 return updtResult;
             }
         } catch (e: unknown) {
-            console.error((<Error>e).message, (<Error>e).stack);
-            return null;
+            throw new ApplicationError(
+                `It was not possible to save the entity with ID '${entity[this.primaryKeyName]}' to ${this.TableName}`,
+                <Error>e,
+            );
         }
     }
 
-    private getExpressionAttributeValues(item: Record<string, AttributeValue>): Record<string, AttributeValue> {
-        const expV: Record<string, AttributeValue> = {};
+    private getExpressionAttributeValues(
+        item: Record<string, NativeAttributeValue>,
+    ): Record<string, NativeAttributeValue> {
+        const expV: Record<string, NativeAttributeValue> = {};
         const attributes = Object.keys(item);
         for (let i = 0; i < attributes.length; i++) {
             if (attributes[i] != this.primaryKeyName) {
@@ -215,7 +218,7 @@ export abstract class EntityDAO {
      * @param item Map with keys and values
      * @returns updte expression
      */
-    private getUpdateExpression(item: Record<string, AttributeValue>): string {
+    private getUpdateExpression(item: Record<string, NativeAttributeValue>): string {
         let exp = 'set ';
         let count = 0;
         const attributes = Object.keys(item);
@@ -238,7 +241,7 @@ export abstract class EntityDAO {
      * @param item Map with keys and values
      * @returns Map between attributes alias and real attribute names
      */
-    private geExpressionAttributeNames(item: Record<string, AttributeValue>): Record<string, string> {
+    private geExpressionAttributeNames(item: Record<string, NativeAttributeValue>): Record<string, string> {
         const result: Record<string, string> = {};
         const attributes = Object.keys(item);
         for (let i = 0; i < attributes.length; i++) {
@@ -256,12 +259,12 @@ export abstract class EntityDAO {
      */
     private async createTable() {
         if (!this.TableName) {
-            throw new Error(`Dynamo Entity with its TableName is required`);
+            throw new ApplicationError(`Dynamo Entity with its TableName is required`);
         }
         const listResult = await this.dbClient.send(new ListTablesCommand({}));
         if (listResult.TableNames && !listResult.TableNames.includes(this.TableName)) {
             if (!this.CreateTableCommandInput) {
-                throw new Error(`Dynamo Entity with its CreateTableCommandInput is required`);
+                throw new ApplicationError(`Dynamo Entity with its CreateTableCommandInput is required`);
             }
             await this.dbClient.send(new CreateTableCommand(this.CreateTableCommandInput));
             return true;
