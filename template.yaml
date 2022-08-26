@@ -14,7 +14,7 @@ Resources:
   NFTTransferEventsViewFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
-      CodeUri: nft-trasnfer-events/
+      CodeUri: nft-transfer-events/
       Handler: app.lambdaHandler
       Runtime: nodejs16.x
       Architectures:
@@ -43,7 +43,7 @@ Outputs:
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/nft-transfers/"
   NFTTransferEventsViewFunction:
     Description: "NFT Transfer Events View Lambda Function ARN"
-    Value: !GetAtt NFTTransferEventsView.Arn
-  NFTTransferEventsViewIamRole:
+    Value: !GetAtt NFTTransferEventsViewFunction.Arn
+  NFTTransferEventsViewFunctionIamRole:
     Description: "Implicit IAM Role created for NFT Transfer Events View function"
-    Value: !GetAtt NFTTransferEventsViewRole.Arn
+    Value: !GetAtt NFTTransferEventsViewFunctionRole.Arn
