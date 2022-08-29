@@ -7,11 +7,6 @@
   "author": "SAM CLI",
   "license": "MIT",
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.154.0",
-    "@aws-sdk/lib-dynamodb": "^3.154.0",
-    "@aws-sdk/smithy-client": "^3.0.0",
-    "@aws-sdk/types": "^3.0.0",
-    "@aws-sdk/util-dynamodb": "^3.154.0"
   },
   "scripts": {
     "unit": "jest --runInBand",
@@ -22,6 +17,11 @@
     "test": "npm run startDynamoLocal && npm run compile && DYNAMODB_ENDPOINT=http://172.17.0.2:8000 npm run unit ; npm run stopDynamoLocal"
   },
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "^3.154.0",
+    "@aws-sdk/lib-dynamodb": "^3.154.0",
+    "@aws-sdk/util-dynamodb": "^3.154.0",
+    "@aws-sdk/smithy-client": "^3.0.0",
+    "@aws-sdk/types": "^3.0.0",
     "@types/aws-lambda": "^8.10.92",
     "@types/jest": "^27.5.2",
     "@types/node": "^17.0.13",
