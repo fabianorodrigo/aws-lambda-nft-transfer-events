@@ -1,5 +1,5 @@
 import { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
-import { JustTestEntityDAO } from './../utils/justTest.entity';
+import { JustTestEntityDAO } from '../utils/justTest.entity';
 
 describe('Entity', function () {
     describe('CONNECT', () => {
