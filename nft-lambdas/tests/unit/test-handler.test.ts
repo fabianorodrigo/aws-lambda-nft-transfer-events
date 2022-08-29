@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
-import { lambdaHandler } from '../../app';
+import { lambdaHandler } from '../../view';
 
 describe('NFT Transfer Events View Lambda handler', function () {
     it('Should return all transfer events persisted on DynamoDB', async () => {

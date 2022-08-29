@@ -1,9 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  nft-transfer-view
+  nft-transfer-events
 
-  Sample SAM Template for nft-transfer-view
+  Sample SAM Template for nft-transfer-events monitorint and visualizing
   
 # More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
 Globals:
@@ -15,7 +15,7 @@ Resources:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
       CodeUri: nft-lambdas/
-      Handler: app.lambdaHandler
+      Handler: view.lambdaHandler
       Runtime: nodejs16.x
       Architectures:
         - x86_64
@@ -35,7 +35,7 @@ Resources:
         Target: "es2020"
         Sourcemap: false
         EntryPoints: 
-        - app.ts
+        - view.ts
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
