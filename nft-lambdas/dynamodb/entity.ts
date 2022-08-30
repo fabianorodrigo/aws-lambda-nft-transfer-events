@@ -118,6 +118,7 @@ export abstract class EntityDAO {
             DEBUG('###DEBUG POS GET', result);
             return result.Item;
         } catch (e: unknown) {
+            DEBUG('###DEBUG EXCEPTION GET', (<Error>e).message);
             throw new ApplicationError(`It was not possible to get ${this.TableName} with ID '${id}'`, <Error>e);
         }
     }
@@ -149,6 +150,7 @@ export abstract class EntityDAO {
             );
             return result.Items;
         } catch (e: unknown) {
+            DEBUG('###DEBUG EXCEPTION GETALL', (<Error>e).message);
             throw new ApplicationError(`It was not possible to get ${this.TableName} registries`, <Error>e);
         }
     }
@@ -191,6 +193,7 @@ export abstract class EntityDAO {
                 return updtResult;
             }
         } catch (e: unknown) {
+            DEBUG('###DEBUG EXCEPTION SAVE', (<Error>e).message);
             throw new ApplicationError(
                 `It was not possible to save the entity with ID '${entity[this.primaryKeyName]}' to ${this.TableName}`,
                 <Error>e,
