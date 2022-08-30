@@ -7,7 +7,7 @@ describe('NFT Transfer Events Entity', function () {
     const PK = 'testing';
     const INITIAL_RECORD = {
         transactionHash: PK,
-        blockNumber: 1952,
+        blockNumber: Math.floor(Math.random() * 100),
         from: 'mary',
         to: 'paul',
         tokenId: 'love',
@@ -49,9 +49,10 @@ describe('NFT Transfer Events Entity', function () {
     describe('PUT', function () {
         it(`Should put event when it does not exist`, async () => {
             const PK_LOCAL = 'testingPUT';
+            const BLOCK_LOCAL = Math.floor(Math.random() * 100);
             const saveResult = (await nftEventsDB.save({
                 transactionHash: PK_LOCAL,
-                blockNumber: 1979,
+                blockNumber: BLOCK_LOCAL,
                 from: 'luciano',
                 to: 'calleri',
                 tokenId: 'gol',
@@ -66,16 +67,17 @@ describe('NFT Transfer Events Entity', function () {
 
     describe('UPDATE', function () {
         it(`Should update event when already exists`, async () => {
+            const BLOCK_LOCAL = Math.floor(Math.random() * 100);
             const result = (await nftEventsDB.save({
                 transactionHash: PK,
-                blockNumber: 1979,
+                blockNumber: BLOCK_LOCAL,
                 to: 'calleri',
                 tokenId: INITIAL_RECORD.tokenId,
             })) as UpdateCommandOutput;
 
             expect(result.$metadata.httpStatusCode).toEqual(200);
             const attributes = result.Attributes as Record<string, NativeAttributeValue>;
-            expect(attributes.blockNumber).toEqual(1979);
+            expect(attributes.blockNumber).toEqual(BLOCK_LOCAL);
             expect(attributes.to).toEqual('calleri');
             expect(attributes.tokenId).toEqual(INITIAL_RECORD.tokenId);
             // só retorna os dados que foram enviados para atualização (mesmo que com o mesmo valor anterior)
@@ -83,7 +85,7 @@ describe('NFT Transfer Events Entity', function () {
 
             const getResult = (await nftEventsDB.get(PK)) as Record<string, NativeAttributeValue>;
             expect(getResult.transactionHash).toEqual(PK);
-            expect(getResult.blockNumber).toEqual(1979);
+            expect(getResult.blockNumber).toEqual(BLOCK_LOCAL);
             expect(getResult.to).toEqual('calleri');
             expect(getResult.from).toEqual(INITIAL_RECORD.from);
             expect(getResult.tokenId).toEqual(INITIAL_RECORD.tokenId);
