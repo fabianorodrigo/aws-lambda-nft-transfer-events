@@ -11,13 +11,16 @@ import { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
 // This abstraction annotates native JavaScript types supplied as input parameters, and converts annotated
 // response data to native JavaScript types.
 import {
+    DeleteCommand,
     DynamoDBDocumentClient,
     GetCommand,
     GetCommandInput,
     PutCommand,
+    PutCommandOutput,
     ScanCommand,
     UpdateCommand,
     UpdateCommandInput,
+    UpdateCommandOutput,
 } from '@aws-sdk/lib-dynamodb';
 import { ApplicationError, DEBUG } from '../utils';
 import { translateConfig } from './dynamoDbDocumentClientOptions';
@@ -118,6 +121,7 @@ export abstract class EntityDAO {
             DEBUG('###DEBUG POS GET', result);
             return result.Item;
         } catch (e: unknown) {
+            DEBUG('###DEBUG EXCEPTION GET', (<Error>e).message);
             throw new ApplicationError(`It was not possible to get ${this.TableName} with ID '${id}'`, <Error>e);
         }
     }
@@ -149,13 +153,18 @@ export abstract class EntityDAO {
             );
             return result.Items;
         } catch (e: unknown) {
+            DEBUG('###DEBUG EXCEPTION GETALL', (<Error>e).message);
             throw new ApplicationError(`It was not possible to get ${this.TableName} registries`, <Error>e);
         }
     }
 
-    async save(
-        entity: Record<string, NativeAttributeValue>,
-    ): Promise<PutItemCommandOutput | UpdateItemCommandOutput | null> {
+    /**
+     * Persists {entity} in the DynamoDB's Table. If the primaryKey doesn't exist in the Table,
+     * executes a PutCommand. Otherwise, executes a UpdateCommand
+     * @param entity Entity to be persisted
+     * @returns A PutCommandOutput if a PutCommand was executed or a UpdateCommandOutput if a UpdateCommand was
+     */
+    async save(entity: Record<string, NativeAttributeValue>): Promise<PutCommandOutput | UpdateCommandOutput | null> {
         if (!this.dbDocClient) throw new ApplicationError(`dbDocClient is required`);
         if (!entity) throw new ApplicationError(`Entity ${this.TableName} is required`);
         try {
@@ -168,7 +177,7 @@ export abstract class EntityDAO {
             //if not found: PUT
             if (!getResult) {
                 DEBUG('###DEBUG PRE PUT', item);
-                const putResult = await this.dbClient.send(
+                const putResult = await this.dbDocClient.send(
                     new PutCommand({
                         TableName: this.TableName,
                         Item: item,
@@ -191,8 +200,41 @@ export abstract class EntityDAO {
                 return updtResult;
             }
         } catch (e: unknown) {
+            DEBUG('###DEBUG EXCEPTION SAVE', (<Error>e).message);
             throw new ApplicationError(
                 `It was not possible to save the entity with ID '${entity[this.primaryKeyName]}' to ${this.TableName}`,
+                <Error>e,
+            );
+        }
+    }
+
+    /**
+     * Deletes {entity} from the DynamoDB's Table.
+     *
+     * @param entity Entity to be persisted
+     * @returns A PutCommandOutput if a PutCommand was executed or a UpdateCommandOutput if a UpdateCommand was
+     */
+    async delete(
+        entity: Record<string, NativeAttributeValue>,
+    ): Promise<PutItemCommandOutput | UpdateItemCommandOutput | null> {
+        if (!this.dbDocClient) throw new ApplicationError(`dbDocClient is required`);
+        if (!entity) throw new ApplicationError(`Entity ${this.TableName} is required`);
+        try {
+            DEBUG('###DEBUG PRE DELETE', entity);
+            const deleteResult = await this.dbDocClient.send(
+                new DeleteCommand({
+                    TableName: this.TableName,
+                    Key: this.getKeyAttributeValueFromEntity(entity),
+                }),
+            );
+            DEBUG('###DEBUG POS DELETE', deleteResult);
+            return deleteResult;
+        } catch (e: unknown) {
+            DEBUG('###DEBUG EXCEPTION DELETE', (<Error>e).message);
+            throw new ApplicationError(
+                `It was not possible to delete the entity with ID '${entity[this.primaryKeyName]}' from ${
+                    this.TableName
+                }`,
                 <Error>e,
             );
         }
