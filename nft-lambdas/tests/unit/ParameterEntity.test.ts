@@ -1,4 +1,4 @@
-import { PutCommandOutput, UpdateCommandOutput } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommandOutput, PutCommandOutput, UpdateCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
 import { ParameterEntityDAO } from '../../dynamodb';
 
@@ -70,6 +70,15 @@ describe('Parameters Entity', function () {
             const getResult = (await parametersDB.get(PK)) as Record<string, NativeAttributeValue>;
             expect(getResult.name).toEqual(PK);
             expect(getResult.value).toEqual(VALUE_LOCAL);
+        });
+    });
+
+    describe('DELETE', function () {
+        it(`Should delete parameter when exists`, async () => {
+            const result = (await parametersDB.delete(INITIAL_RECORD)) as DeleteCommandOutput;
+            expect(result.$metadata.httpStatusCode).toEqual(200);
+            const getResult = (await parametersDB.get(INITIAL_RECORD.name)) as Record<string, NativeAttributeValue>;
+            expect(getResult).toBeUndefined();
         });
     });
 });

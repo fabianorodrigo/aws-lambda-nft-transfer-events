@@ -48,3 +48,7 @@ export class ParameterEntityDAO extends EntityDAO {
         });
     }
 }
+
+export const PARAMETERS: { [key: string]: string } = {
+    LAST_BLOCK_CHECKED: 'lastBlockChecked',
+};

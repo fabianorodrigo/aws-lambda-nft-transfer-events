@@ -1,4 +1,4 @@
-import { PutCommandOutput, UpdateCommandOutput } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommandOutput, PutCommandOutput, UpdateCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/util-dynamodb';
 import { NFTEventEntityDAO } from '../../dynamodb';
 
@@ -50,18 +50,21 @@ describe('NFT Transfer Events Entity', function () {
         it(`Should put event when it does not exist`, async () => {
             const PK_LOCAL = 'testingPUT';
             const BLOCK_LOCAL = Math.floor(Math.random() * 100);
-            const saveResult = (await nftEventsDB.save({
+            const ENTITY_LOCAL = {
                 transactionHash: PK_LOCAL,
                 blockNumber: BLOCK_LOCAL,
                 from: 'luciano',
                 to: 'calleri',
                 tokenId: 'gol',
-            })) as PutCommandOutput;
+            };
+            const saveResult = (await nftEventsDB.save(ENTITY_LOCAL)) as PutCommandOutput;
 
             expect(saveResult.$metadata.httpStatusCode).toEqual(200);
 
             const getResult = (await nftEventsDB.get(PK_LOCAL)) as Record<string, NativeAttributeValue>;
             expect(getResult.transactionHash).toEqual(PK_LOCAL);
+            //delete
+            await nftEventsDB.delete(ENTITY_LOCAL);
         });
     });
 
@@ -89,6 +92,18 @@ describe('NFT Transfer Events Entity', function () {
             expect(getResult.to).toEqual('calleri');
             expect(getResult.from).toEqual(INITIAL_RECORD.from);
             expect(getResult.tokenId).toEqual(INITIAL_RECORD.tokenId);
+        });
+    });
+
+    describe('DELETE', function () {
+        it(`Should delete event when exists`, async () => {
+            const result = (await nftEventsDB.delete(INITIAL_RECORD)) as DeleteCommandOutput;
+            expect(result.$metadata.httpStatusCode).toEqual(200);
+            const getResult = (await nftEventsDB.get(INITIAL_RECORD.transactionHash)) as Record<
+                string,
+                NativeAttributeValue
+            >;
+            expect(getResult).toBeUndefined();
         });
     });
 });
