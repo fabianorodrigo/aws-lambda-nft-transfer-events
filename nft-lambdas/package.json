@@ -1,10 +1,9 @@
 {
   "name": "nft-transfer-events",
   "version": "1.0.0",
-  "description": "hello world sample for NodeJS",
-  "main": "app.js",
-  "repository": "https://github.com/awslabs/aws-sam-cli/tree/develop/samcli/local/init/templates/cookiecutter-aws-sam-hello-nodejs",
-  "author": "SAM CLI",
+  "description": "NFT Transfer Events monitoring, persistence and query",
+  "repository": "https://github.com/fabianorodrigo/aws-lambda-nft-transfer-events",
+  "author": "Fabiano Nascimento",
   "license": "MIT",
   "dependencies": {
     "ethers": "^5.7.0",
@@ -15,7 +14,6 @@
   "config":{
     "stackName": "nft-transfer-events",
     "awsRegion": "us-east-1"
-
   },
   "scripts": {
     "deploy": "echo 'NOT working properly. Investigate later' || (sam build  --use-container --beta-features --region $npm_package_config_awsRegion --template-file ../template.yaml && sam deploy --stack-name $npm_package_config_stackName --template-file ../template.yaml)",
