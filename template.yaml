@@ -10,14 +10,24 @@ Globals:
   Function:
     Timeout: 3
 
+Parameters:
+  EthProviderParameter:
+    Type: String
+    Description: Enter the URL endpoint of the Ethereum Provider (ex. Infura, Alchemy etc)
+    NoEcho: true
+  ERC721AddressParameter:
+    Type: String
+    Description: Enter contract ERC-721 to be monitored
+    MaxLength: "42"
+
 Resources:
-  EventsTable:
-    Type: AWS::Serverless::SimpleTable
-    Properties:
-      PrimaryKey: 
-        Name: transactionHash
-        Type: string
-      TableName: NFTEvents
+  # EventsTable:
+  #   Type: AWS::Serverless::SimpleTable
+  #   Properties:
+  #     PrimaryKey: 
+  #       Name: transactionHash
+  #       Type: String
+  #     TableName: NFTEvents
   NFTTransferEventsViewFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -62,7 +72,15 @@ Resources:
             Name: nft-transfer-searching
             Description: Searches for Transfer events in a specific NFT smart contract
       MemorySize: 128
-      Timeout: 100            
+      Timeout: 100
+      Environment:
+        Variables:
+          ETH_PROVIDER:
+            Ref: EthProviderParameter
+          FROM_BLOCK: 27634000
+          CONTRACT_ADDRESS:
+            Ref: ERC721AddressParameter
+
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
