@@ -20,10 +20,7 @@ export const lambdaHandler = async (event: APIGatewayProxyEvent): Promise<APIGat
         // como 'from' e 'to' são palavras reservadas no DynamoDB, eles precisam ser
         // receber um outro nome com prefixo '#' no ProjectionExpression e, no ExpressionAttributeNames,
         // faz-se o mapeamento com o nome original da coluna ('from' e 'to')
-        const transferEvents: never[] = []; /* await nftEventsDB.getAll('blockNumber,#from,#to,tokenId', {
-            '#from': 'from',
-            '#to': 'to',
-        })*/
+        const transferEvents = await nftEventsDB.getAll();
 
         response = {
             statusCode: 200,
