@@ -12,7 +12,13 @@
     "@aws-sdk/client-dynamodb": "^3.154.0",
     "@aws-sdk/lib-dynamodb": "^3.154.0"
   },
+  "config":{
+    "stackName": "nft-transfer-events",
+    "awsRegion": "us-east-1"
+
+  },
   "scripts": {
+    "deploy": "echo 'NOT working properly. Investigate later' || (sam build  --use-container --beta-features --region $npm_package_config_awsRegion --template-file ../template.yaml && sam deploy --stack-name $npm_package_config_stackName --template-file ../template.yaml)",
     "unit": "jest --runInBand ",
     "lint": "eslint '*.ts' --quiet --fix",
     "compile": "tsc --project ./tsconfig.build.json",
