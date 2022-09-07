@@ -7,7 +7,10 @@
   "author": "SAM CLI",
   "license": "MIT",
   "dependencies": {
-    "ethers": "^5.7.0"
+    "ethers": "^5.7.0",
+    "esbuild": "^0.14.14",
+    "@aws-sdk/client-dynamodb": "^3.154.0",
+    "@aws-sdk/lib-dynamodb": "^3.154.0"
   },
   "scripts": {
     "unit": "jest --runInBand ",
@@ -18,8 +21,6 @@
     "test": "npm run startDynamoLocal && npm run compile && DYNAMODB_ENDPOINT=http://172.17.0.2:8000 CONTRACT_ADDRESS=0x0A10eb7aE39BbB66a86138443847D5fA1Fe60503 FROM_BLOCK=27634000 npm run unit; npm run stopDynamoLocal"
   },
   "devDependencies": {
-    "@aws-sdk/client-dynamodb": "^3.154.0",
-    "@aws-sdk/lib-dynamodb": "^3.154.0",
     "@aws-sdk/smithy-client": "^3.0.0",
     "@aws-sdk/types": "^3.0.0",
     "@aws-sdk/util-dynamodb": "^3.154.0",
@@ -27,8 +28,7 @@
     "@types/jest": "^27.5.2",
     "@types/node": "^17.0.13",
     "@typescript-eslint/eslint-plugin": "^5.10.2",
-    "@typescript-eslint/parser": "^5.10.2",
-    "esbuild": "^0.14.14",
+    "@typescript-eslint/parser": "^5.10.2",  
     "esbuild-jest": "^0.5.0",
     "eslint": "^8.8.0",
     "eslint-config-prettier": "^8.3.0",
