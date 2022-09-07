@@ -1,15 +1,17 @@
-# NFT Transfer Events View
+# NFT Transfer Events
 
-The only feature of this project is to make available an endpoint that will list the registries of NFT Transfer Events persisted on a DynamoDB Table named `NFTEvents` by another Lambda function, [NFT Transfer Monitor](https://github.com/fabianorodrigo/aws-lambda-nft-transfer-monitor), that is triggered by a scheduled event.
+This project consist of two lambda functions. One is triggered by a Scheduled event (every 10 minutes) and is responsible for monitor the Transfer events of a NFT smart contract (ERC-721) and persists the caught events into a DyanmoDB Table named `NFTEvents`; the other lambda is available through an endpoint that will list the registries of NFT Transfer Events persisted by the former.
 
 This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
 
-- nft-transfer-events - Code for the application's Lambda function written in TypeScript.
+- nft-lambdas - Code for the application's Lambda functions written in TypeScript.
 - events - Invocation events that you can use to invoke the function.
-- nft-transfer-events/tests - Unit tests for the application code. 
-- template.yaml - A template that defines the application's AWS resources.
+- nft-lambdas/dynamodb - features related to DynamoDB operations
+- nft-lambdas/web3 - features related to interaction with NFT smart contract
+- nft-lambdas/tests - Unit tests for the application code. 
+- template.yaml - A template that defines the application's AWS resources and parameters.
 
-The application uses several AWS resources, including Lambda functions and an API Gateway API. These resources are defined in the `template.yaml` file in this project. You can update the template to add AWS resources through the same deployment process that updates your application code.
+The application uses several AWS resources, including Lambda functions, an API Gateway API and a CloudWatch Event. These resources are defined in the `template.yaml` file in this project.
 
 ## Deploy
 
@@ -24,16 +26,27 @@ To use the SAM CLI, you need the following tools.
 When deploying the app using just `sam deploy --guided` an error was thrown: `Unzipped size must be smaller than 262144000 bytes`. The solution was to build with the Package Type `Image` in spite of zip:
 
 ```bash
-sam build --use-container
+sam build --use-container --beta-features
 sam deploy --guided
 ```
 
-The first command build the source of the application in a container image, which includes the base operating system, runtime, and extensions, in addition to application code and its dependencies.The second command packages and deploys the application to AWS, with a series of prompts:
+The first command build the source of the application in a container image, which includes the base operating system, runtime, and extensions, in addition to application code and its dependencies. Since the use of esbuild to build Typescript code is still experimental, the `--beta-features` is necessary or a prompt to confirme the use of this beta feature will be shown: *Please confirm if you would like to proceed with using esbuild to build your function. You can also enable this beta feature with 'sam build --beta-features'*
+
+
+The second command packages and deploys the application to AWS, with a series of prompts:
 
 * **Stack Name**: The name of the stack to deploy to CloudFormation. This should be unique to your account and region, and a good starting point would be something matching your project name.
+  
 * **AWS Region**: The AWS region you want to deploy your app to.
+  
+* **Parameter EthProviderParameter**: This is the Ethereum Provider URL endpoint that will be used by the application. Typically, you should make a register in Ethereum Providers, like Alchemy or Infura, and it will be generated this URL. Example of an app to connect to Polygon Mumbai Network at Alchemy: [https://polygon-mumbai.g.alchemy.com/v2/<a secret key>](https://docs.alchemy.com/docs/alchemy-quickstart-guide#1key-create-an-alchemy-key)
+  
+* **Parameter ERC721AddressParameter**: The address of the ERC-721 contract that you want to watch the transfer events.
+  
 * **Confirm changes before deploy**: If set to yes, any change sets will be shown to you before execution for manual review. If set to no, the AWS SAM CLI will automatically deploy application changes.
+  
 * **Allow SAM CLI IAM role creation**: Many AWS SAM templates, including this example, create AWS IAM roles required for the AWS Lambda function(s) included to access AWS services. By default, these are scoped down to minimum required permissions. To deploy an AWS CloudFormation stack which creates or modifies IAM roles, the `CAPABILITY_IAM` value for `capabilities` must be provided. If permission isn't provided through this prompt, to deploy this example you must explicitly pass `--capabilities CAPABILITY_IAM` to the `sam deploy` command.
+  
 * **Save arguments to samconfig.toml**: If set to yes, your choices will be saved to a configuration file inside the project, so that in the future you can just re-run `sam deploy` without parameters to deploy changes to your application.
 
 You can find your API Gateway Endpoint URL in the output values displayed after deployment.
@@ -53,14 +66,16 @@ Test a single function by invoking it directly with a test event. An event is a 
 Run functions locally and invoke them with the `sam local invoke` command.
 
 ```bash
-nft-transfer-view$ sam local invoke HelloWorldFunction --event events/event.json
+$ sam local invoke NFTTransferEventsMonitorFunction --event events/event-cloudwatch.json
+
+$ sam local invoke NFTTransferEventsViewFunction --event events/event-API-Gateway.json
 ```
 
 The SAM CLI can also emulate your application's API. Use the `sam local start-api` to run the API locally on port 3000.
 
 ```bash
-nft-transfer-view$ sam local start-api
-nft-transfer-view$ curl http://localhost:3000/
+$ sam local start-api
+$ curl http://localhost:3000/
 ```
 
 The SAM CLI reads the application template to determine the API's routes and the functions that they invoke. The `Events` property on each function's definition includes the route and method for each path.
@@ -84,19 +99,19 @@ To simplify troubleshooting, SAM CLI has a command called `sam logs`. `sam logs`
 `NOTE`: This command works for all AWS Lambda functions; not just the ones you deploy using SAM.
 
 ```bash
-nft-transfer-view$ sam logs -n HelloWorldFunction --stack-name nft-transfer-view --tail
+$ sam logs -n NFTTransferEventsMonitorFunction --stack-name nft-transfer-events --tail
 ```
 
 You can find more information and examples about filtering Lambda function logs in the [SAM CLI Documentation](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-cli-logging.html).
 
 ## Unit tests
 
-Tests are defined in the `nft-transfer-events/tests` folder in this project. Use NPM to install the [Jest test framework](https://jestjs.io/) and run unit tests.
+Tests are defined in the `nft-lambdas/tests` folder in this project. Use NPM to install the [Jest test framework](https://jestjs.io/) and run unit tests.
 
 ```bash
-$ cd nft-transfer-events
-$ npm install
-$ npm run test
+$ cd nft-lambdas
+$ pnpm install
+$ pnpm run test
 ```
 
 ## Cleanup
@@ -104,7 +119,7 @@ $ npm run test
 To delete the sample application that you created, use the AWS CLI. Assuming you used your project name for the stack name, you can run the following:
 
 ```bash
-aws cloudformation delete-stack --stack-name nft-transfer-view
+aws cloudformation delete-stack --stack-name nft-transfer-events
 ```
 
 ## Resources
