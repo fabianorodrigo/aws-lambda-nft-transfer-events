@@ -9,4 +9,4 @@ region = "us-east-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
 image_repositories = []
-parameter_overrides = "ERC721AddressParameter=\"0x0A10eb7aE39BbB66a86138443847D5fA1Fe60503\""
+parameter_overrides = "StageName=\"dev\" ERC721AddressParameter=\"0x0A10eb7aE39BbB66a86138443847D5fA1Fe60503\""

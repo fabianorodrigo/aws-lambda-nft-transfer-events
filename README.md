@@ -5,11 +5,11 @@ This project consist of two lambda functions. One is triggered by a Scheduled ev
 This project contains source code and supporting files for a serverless application that you can deploy with the SAM CLI. It includes the following files and folders.
 
 - nft-lambdas - Code for the application's Lambda functions written in TypeScript.
-- events - Invocation events that you can use to invoke the function.
 - nft-lambdas/dynamodb - features related to DynamoDB operations
 - nft-lambdas/web3 - features related to interaction with NFT smart contract
 - nft-lambdas/tests - Unit tests for the application code. 
 - template.yaml - A template that defines the application's AWS resources and parameters.
+- events - Invocation events that you can use to invoke the function.
 
 The application uses several AWS resources, including Lambda functions, an API Gateway API and a CloudWatch Event. These resources are defined in the `template.yaml` file in this project.
 
@@ -38,6 +38,8 @@ The second command packages and deploys the application to AWS, with a series of
 * **Stack Name**: The name of the stack to deploy to CloudFormation. This should be unique to your account and region, and a good starting point would be something matching your project name.
   
 * **AWS Region**: The AWS region you want to deploy your app to.
+
+* **Parameter StageName**: The Stage you want to deploy your app to (dev or prod).
   
 * **Parameter EthProviderParameter**: This is the Ethereum Provider URL endpoint that will be used by the application. Typically, you should make a register in Ethereum Providers, like Alchemy or Infura, and it will be generated this URL. Example of an app to connect to Polygon Mumbai Network at Alchemy: [https://polygon-mumbai.g.alchemy.com/v2/<a secret key>](https://docs.alchemy.com/docs/alchemy-quickstart-guide#1key-create-an-alchemy-key)
   

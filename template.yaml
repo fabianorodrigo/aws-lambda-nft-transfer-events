@@ -11,6 +11,13 @@ Globals:
     Timeout: 3
 
 Parameters:
+  StageName:
+    Type: String
+    Default: dev
+    Description: (Required) Enter dev, prod. Default is dev.
+    AllowedValues:
+      - dev
+      - prod
   EthProviderParameter:
     Type: String
     Description: Enter the URL endpoint of the Ethereum Provider (ex. Infura, Alchemy etc)
@@ -21,13 +28,26 @@ Parameters:
     MaxLength: "42"
 
 Resources:
-  # EventsTable:
-  #   Type: AWS::Serverless::SimpleTable
-  #   Properties:
-  #     PrimaryKey: 
-  #       Name: transactionHash
-  #       Type: String
-  #     TableName: NFTEvents
+  NFTTransferEventsAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref StageName
+      Cors: "'*'"
+      # https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-controlling-access-to-apis.html
+      Auth:
+        DefaultAuthorizer: NFTEventsAuthorizer
+        Authorizers:
+          NFTEventsAuthorizer:
+            FunctionArn: !GetAtt AuthorizerLambdaFunction.Arn
+
+  AuthorizerLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: nft-lambdas/
+      Handler: authorizer.lambdaAuthHandler
+      Runtime: nodejs16.x
+      Architectures:
+        - x86_64  
   NFTTransferEventsViewFunction:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Properties:
@@ -40,11 +60,12 @@ Resources:
         # Give the Lambda service access to poll DynamoDB Stream
         - AmazonDynamoDBFullAccess
       Events:
-        NFTTransferEventsView:
+        ApiEvent:
           Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
           Properties:
             Path: /nft-transfers
             Method: get
+            RestApiId: !Ref NFTTransferEventsAPI
     Metadata: # Manage esbuild properties
       BuildMethod: esbuild
       BuildProperties:
@@ -94,9 +115,13 @@ Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
   # Find out more about other implicit resources you can reference within SAM
   # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  Region:
+    Description: "Deploy Region"
+    Value: !Ref AWS::Region
   NFTTransferEventsViewApi:
     Description: "API Gateway endpoint URL for Prod stage for NFT Transfer Events View function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/nft-transfers/"
+    # when the API Gateway was implicited created by Events, the following line was: Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/nft-transfers/"
+    Value: !Sub "https://${NFTTransferEventsAPI}.execute-api.${AWS::Region}.amazonaws.com/${StageName}/nft-transfers/"
   NFTTransferEventsViewFunction:
     Description: "NFT Transfer Events View Lambda Function ARN"
     Value: !GetAtt NFTTransferEventsViewFunction.Arn
