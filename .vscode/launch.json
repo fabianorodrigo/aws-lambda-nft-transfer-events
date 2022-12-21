@@ -8,11 +8,11 @@
             "type": "node",
             "request": "launch",
             "name": "Launch Jest Test",
-            "cwd": "${workspaceFolder}/nft-transfer-events/",
+            "cwd": "${workspaceFolder}/nft-lambdas/",
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "${workspaceFolder}/nft-transfer-events/node_modules/jest/bin/jest.js",
+            "program": "${workspaceFolder}/nft-lambdas/node_modules/jest/bin/jest.js",
             "console": "integratedTerminal",
             "outFiles": [
                 "${workspaceFolder}/**/*.js"
